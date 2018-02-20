@@ -48,7 +48,7 @@ impl Dim for [usize;2] {
     }
     
     fn check_bounds(&self, coord: &Self::Coord)->bool{
-        if self.get(0) >=  coord[0] && self.get(1) >=  coord[1]{
+        if self.get(0) >  coord[0] && self.get(1) >  coord[1]{
             true
         }else{
             false
@@ -112,12 +112,13 @@ impl<T,C,D> Index<C> for Matrix<T,D>
     }
 }
 
-impl<T:fmt::Display,D:Dim> fmt::Display for Matrix<T,D> {
+impl<T:fmt::Display> fmt::Display for Matrix<T,[usize;2]> {
     fn fmt(&self, f: &mut fmt::Formatter ) ->fmt::Result {
         
         for n in 0..self.dim.get(1) {
-            for n in 0..self.dim.get(0){
-                write!(f,"{} ", self.data[n])?;
+            for m in 0..self.dim.get(0){
+                
+                write!(f,"{} ", self[[n,m]])?;
             }
             write!(f,"\n")?;
        }
@@ -155,7 +156,7 @@ mod tests {
     fn vector() {
         let matrix = Matrix::new(vec![2,3,4],[1 as usize, 3 as usize]);
         let macro_matrix = mat![2,3,4];
-         println!("{}",macro_matrix );
+        println!("{}",macro_matrix );
 
         assert_eq!(matrix.data, macro_matrix.data);
         //assert_eq!(matrix.dim(), macro_matrix.dim());
@@ -173,7 +174,8 @@ mod tests {
     #[test]
     fn indexing() {
         let matrix = mat![2,3,4;5,6,7;8,9,10];
+        println!("{}",matrix );
         
-        assert_eq!(5, matrix[[0,1]]);
+        assert_eq!(5, matrix[[1,0]]);
     }
 }
