@@ -5,8 +5,14 @@ TO DO:
 
 
 Expand Matrices to N dimensions;
+
 Implement Matrice Views (Slices);
+
 Implement Iterators over various views;
+
 Implement other matrix creating functions;
+
 Implement Operations;
+
 Implement Operator Overloading;
+
