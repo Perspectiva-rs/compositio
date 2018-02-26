@@ -3,6 +3,7 @@ A Matrix implementation in Rust aiming for usability and integrability with othe
 
 TO DO:
 
+Comment and organize code in a sensible manner;
 
 Expand Matrices to N dimensions;
 
