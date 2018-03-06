@@ -3,8 +3,16 @@ use std::ops::Index;
 use std::borrow::Borrow;
 use std::borrow::BorrowMut;
 use std::process;
+
+mod matrix{
+
+}
+
+
+///Vectors or slices that can be used to carry coordinates to index an array.
 pub trait Coord{
     type Dimension: Dim + ?Sized;
+    /// function that converts the received coordinates to a column major index
     fn index_checked(&self, dim: &Self::Dimension) -> Result<usize,&'static str>;
 
 }
@@ -13,7 +21,6 @@ impl Coord for [usize]{
     type Dimension =  [usize];
 
     fn index_checked(&self, dim: &[usize]) ->Result<usize,&'static str>{
-        
         if dim.check_bounds(&self) {
             let mut index: usize = self[0];
             for  i in 1..dim.len(){
@@ -26,7 +33,7 @@ impl Coord for [usize]{
         }
     }
 }
-
+/// Vectors or slices that can be used to identify the dimension of the matrix.
 pub trait Dim{
     type Coord: Coord + ?Sized;
     fn as_array(&self) -> &[usize];
@@ -58,7 +65,6 @@ impl Dim for [usize] {
     fn set(&mut self,axis:usize,new_dim:usize){
         self[axis] = new_dim;
     }
-    //needs to be expanded to N dimensions;
     fn check_bounds(&self, coord: &Self::Coord)->bool{
         if self.len() != coord.len(){
             false
@@ -92,30 +98,40 @@ impl Dim for [usize] {
         }
 }
 
+///An n dimensional array.
+/// The array is a general container of data.
+/// The array can grow.
+/// The array can be indexed by using a number of coordinates equal to the dimension of the matrix.
 #[derive(Debug,PartialEq)]
 pub struct Matrix<T,D:  ?Sized>{
     pub data: Vec<T>,
     pub dim: D,
 }
 impl<'a,T> Matrix<T,Vec<usize>>{
+
+    /// constructor method for owned arrays.
     pub fn new(data:Vec<T>,dim:Vec<usize>) -> Matrix<T,Vec<usize>> {
         Matrix{data , dim}
     }
+    /// returns the dimensions of the matrix as a slice.
     pub fn dim(&'a self) -> &[usize] {
         &self.dim 
     }
+    /// returns thre dimensions of the matrix as a mutable slice.
     fn mut_dim(& mut self) -> & mut [usize] {
         &mut self.dim
     }
 
-    pub fn data(&self) -> &Vec<T>{
+    /// returns a reference to the matrices raw_data. 
+    pub fn raw_data(&self) -> &Vec<T>{
         &self.data 
     }
-    pub fn data_mut(&mut self) -> &mut Vec<T> {
+    /// returns a mutable reference to the matrices raw_data.
+    pub fn raw_data_mut(&mut self) -> &mut Vec<T> {
         &mut self.data
     }
-
-    pub fn append_column(&mut self, column: &mut Vec<T>) {
+    ///appends a column to a matrice from raw_data.
+    pub(crate) fn append_column_from_raw(&mut self, column: &mut Vec<T>) {
         {let  dim = self.mut_dim();
             if !dim.is_empty() {
                 dim[0] = column.len();
@@ -135,12 +151,13 @@ impl<'a,T> Matrix<T,Vec<usize>>{
 }
 type Matrixf32 = Matrix<f32,Vec<usize>>;
 impl Matrixf32{
-
-     pub fn zeros(dim:Vec<usize>) -> Matrixf32{
+    /// creates matrix of with dimensions dim filled with zeros.
+    pub fn zeros(dim:Vec<usize>) -> Matrixf32{
         let length = dim.iter().product();
 
         Matrix{data: vec![0.0;length], dim:dim}
     }
+    ///creates matrix with dimensions dim filled with ones.
      pub fn ones(dim:Vec<usize>)-> Matrixf32{
         let length = dim.iter().product();
 
@@ -149,26 +166,25 @@ impl Matrixf32{
 }
 type Matrixi32 = Matrix<i32,Vec<usize>>;
 impl Matrixi32{
-
+    /// creates matrix of with dimensions dim filled with zeros.
      pub fn zeros(dim:Vec<usize>)-> Matrixi32{
         let length = dim.iter().product();
 
         Matrix{data: vec![0;length], dim:dim}
     }
+    ///creates matrix with dimensions dim filled with ones.
      pub fn ones(dim:Vec<usize>)-> Matrixi32{
         let length = dim.iter().product();
-
         Matrix{data: vec![1;length], dim:dim}
     }
 }
 
-impl<'a,'b, T> Index<&'a [usize]> for Matrix<T,Vec<usize>>
-    
 
-    {
+//implements the Index method for an N dimension matrix.
+impl<'a,'b, T> Index<&'a [usize]> for Matrix<T,Vec<usize>>{
     type Output = T;    
     fn index(& self, index:&[usize]) -> &T{
-        let data = self.data();
+        let data = self.raw_data();
         &data[index.index_checked( self.dim() ).unwrap_or_else(|err| 
             {
                 eprintln!("{}", err);
@@ -179,8 +195,6 @@ impl<'a,'b, T> Index<&'a [usize]> for Matrix<T,Vec<usize>>
 impl<'a,T> fmt::Display for Matrix<T,Vec<usize>> 
     where
         T:fmt::Display,
-        
-    
     {
     fn fmt(&self, f: &mut fmt::Formatter ) ->fmt::Result {
         
@@ -194,16 +208,16 @@ impl<'a,T> fmt::Display for Matrix<T,Vec<usize>>
        write!(f,"")
     }
 }
-// [1, 1, 1, 1, 1] => Vec<>
-// [1, 1, 1, 1, 1]
-// [1,1,1,1;1,1,1,1;1,1,1,1] 1,1,1,1,1; mat!(mat1|mat2)
+
+///Preferred way to initiate smaller matrices.
+///Numbers in a column are separated by commas. Different columns are separated by semi-colons. 
 #[allow(unused_macros)]
 macro_rules! mat {
         ($($($x:expr),*);*) => {
             {
                 let mut matrix = Matrix::new(vec![],vec![0, 0]);
                 $(let mut vector = vec![$($x),*];
-                matrix.append_column(&mut vector);
+                matrix.append_column_from_raw(&mut vector);
                 );*
 
                 matrix
@@ -222,7 +236,7 @@ mod tests {
     //use super::macros;
     #[test]
     fn vector() {
-        let matrix = Matrix::new(vec![2,3,4],vec![3 as usize, 1 as usize]);
+        let matrix = Matrix::new(vec![2,3,4],vec![3, 1]);
         let macro_matrix = mat![2,3,4];
         println!("\n{}",matrix);
         println!("{},{}",matrix[&[1,0]],matrix[&[2,0]]);
@@ -234,7 +248,7 @@ mod tests {
     }
     #[test]
     fn matrix() {
-        let matrix = Matrix::new(vec![2,3,4,5,6,7,8,9,10],vec![3 as usize, 3 as usize]);
+        let matrix = Matrix::new(vec![2,3,4,5,6,7,8,9,10],vec![3, 3]);
         let macro_matrix = mat![2,3,4;5,6,7;8,9,10];
         
         assert_eq!(matrix, macro_matrix);
@@ -258,7 +272,7 @@ mod tests {
     fn indexing_5d() {
         let matrix = Matrix::new(vec![1,2,3,4, 5,6,7,8,  9,10,11,12, 13,14,15,16],vec![2,2,2,2]);
         
-        assert_eq!(8,matrix[&[1,1,1,1]]);
+        assert_eq!(16,matrix[&[1,1,1,1]]);
     }
     #[test]
     fn zeros_and_ones_matrix(){
