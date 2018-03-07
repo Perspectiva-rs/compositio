@@ -1,102 +1,13 @@
-use std::fmt;
-use std::ops::Index;
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
-use std::process;
-
-mod matrix{
-
-}
 
 
-///Vectors or slices that can be used to carry coordinates to index an array.
-pub trait Coord{
-    type Dimension: Dim + ?Sized;
-    /// function that converts the received coordinates to a column major index
-    fn index_checked(&self, dim: &Self::Dimension) -> Result<usize,&'static str>;
 
-}
 
-impl Coord for [usize]{
-    type Dimension =  [usize];
+#[macro_use] mod macros;
+mod trait_impl;
+mod dim_traits;
 
-    fn index_checked(&self, dim: &[usize]) ->Result<usize,&'static str>{
-        if dim.check_bounds(&self) {
-            let mut index: usize = self[0];
-            for  i in 1..dim.len(){
-                let dimensions_crossed: usize = dim[0..i].iter().product();
-                index += self[i] * dimensions_crossed;
-            }
-            Ok(index)
-        }else{
-            Err("Index exceeds matrix dimensions")
-        }
-    }
-}
-/// Vectors or slices that can be used to identify the dimension of the matrix.
-pub trait Dim{
-    type Coord: Coord + ?Sized;
-    fn as_array(&self) -> &[usize];
-    fn as_mut_array(&mut self) -> &mut [usize];
-    fn increase_size(&mut self, axis: usize, inc: usize);
-    fn get(&self,axis:usize) -> usize;
-    fn set(&mut self,axis:usize,new_dim:usize);
-    fn check_bounds(&self, coord: &Self::Coord)->bool;
-    fn is_empty(&self) ->bool;
-    fn is_column_vector(&self) -> bool;
-}
+use dim_traits::Dim;
 
-impl Dim for [usize] {
-    type Coord = [usize];
-    
-    fn as_array(&self) -> &[usize]{
-        self.borrow()
-    }
-    fn as_mut_array(&mut self) -> &mut [usize] {
-        self.borrow_mut()
-    }
-
-    fn increase_size(&mut self, axis: usize, inc: usize){
-        self[axis] = self[axis] + inc;
-    }
-    fn get(&self,axis:usize) -> usize{
-        self[axis]
-    }
-    fn set(&mut self,axis:usize,new_dim:usize){
-        self[axis] = new_dim;
-    }
-    fn check_bounds(&self, coord: &Self::Coord)->bool{
-        if self.len() != coord.len(){
-            false
-        }else{
-            let mut inbounds = true;
-            for n in 0..coord.len() {
-                if self[n] > coord[n]{
-                    inbounds = true;
-                } else{
-                    inbounds = false;
-                    break;
-                } 
-            }
-            inbounds
-        }
-    }
-    
-    fn is_empty(&self) ->bool{
-        if &[0usize,0usize] == self {
-            true
-        }else{
-            false
-        }
-    }
-        fn is_column_vector(&self) -> bool{
-            if self[0] > 1 && self[1] == 0{
-                true
-            }else{
-                false
-            }
-        }
-}
 
 ///An n dimensional array.
 /// The array is a general container of data.
@@ -180,58 +91,17 @@ impl Matrixi32{
 }
 
 
-//implements the Index method for an N dimension matrix.
-impl<'a,'b, T> Index<&'a [usize]> for Matrix<T,Vec<usize>>{
-    type Output = T;    
-    fn index(& self, index:&[usize]) -> &T{
-        let data = self.raw_data();
-        &data[index.index_checked( self.dim() ).unwrap_or_else(|err| 
-            {
-                eprintln!("{}", err);
-                process::exit(1)})]
-            }   
-}
 
-impl<'a,T> fmt::Display for Matrix<T,Vec<usize>> 
-    where
-        T:fmt::Display,
-    {
-    fn fmt(&self, f: &mut fmt::Formatter ) ->fmt::Result {
-        
-        for n in 0..self.dim()[0] {
-            for m in 0..self.dim()[1]{
-                
-                write!(f,"{} ", self[&[n,m]])?;
-            }
-            write!(f,"\n")?;
-       }
-       write!(f,"")
-    }
-}
 
-///Preferred way to initiate smaller matrices.
-///Numbers in a column are separated by commas. Different columns are separated by semi-colons. 
-#[allow(unused_macros)]
-macro_rules! mat {
-        ($($($x:expr),*);*) => {
-            {
-                let mut matrix = Matrix::new(vec![],vec![0, 0]);
-                $(let mut vector = vec![$($x),*];
-                matrix.append_column_from_raw(&mut vector);
-                );*
 
-                matrix
-            }
-        };
-    }
 
-#[macro_use]
 #[cfg(test)]
 
 
 mod tests {
     
     use super::*;
+    
     
     //use super::macros;
     #[test]
