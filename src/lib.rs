@@ -7,25 +7,54 @@ mod trait_impl;
 mod dim_traits;
 
 use dim_traits::Dim;
+use std::ops::Index;
+use std::rc::Rc;
+use std::marker::PhantomData;
 
 
-///An n dimensional array.
+///Private trait to encapsulate collections that can hold matrix data
+
+pub trait MatCollection<T>: Index<usize, Output = T>{
+}
+
+impl<T> MatCollection<T> for Vec<T>{
+}
+
+impl<T> MatCollection<T> for BorrowedData<T>{}
+
+#[derive(Debug,PartialEq)]
+pub struct BorrowedData<T>(Box<Vec<T>>);
+
+impl<T> Index<usize> for BorrowedData<T> {
+    type Output = T;
+    
+    fn index(&self, index: usize) -> &T {
+        &self.0[index]
+    }
+}
+
+type OwnedMatrix<T> = Matrix<T,Vec<T>,Vec<usize>>;
+type MatrixView<T> =  Matrix<T, BorrowedData<T>,Vec<usize>>;
+
+/// An n dimensional array.
 /// The array is a general container of data.
 /// The array can grow.
 /// The array can be indexed by using a number of coordinates equal to the dimension of the matrix.
 #[derive(Debug,PartialEq)]
-pub struct Matrix<T,D:  ?Sized>{
-    pub data: Vec<T>,
-    pub dim: D,
+pub struct Matrix<T,A:MatCollection<T>, D>{
+    data: A,
+    dim: D,
+    dummy: PhantomData<T>,
 }
-impl<'a,T> Matrix<T,Vec<usize>>{
+impl<T, A:MatCollection<T>> Matrix<T,A,Vec<usize>>{
 
     /// constructor method for owned arrays.
-    pub fn new(data:Vec<T>,dim:Vec<usize>) -> Matrix<T,Vec<usize>> {
-        Matrix{data , dim}
+    pub fn new(data:A,dim:Vec<usize>) -> Matrix<T,A,Vec<usize>> {
+        Matrix{data:data , dim:dim,dummy:PhantomData}
     }
+
     /// returns the dimensions of the matrix as a slice.
-    pub fn dim(&'a self) -> &[usize] {
+    pub fn dim(& self) -> &[usize] {
         &self.dim 
     }
     /// returns thre dimensions of the matrix as a mutable slice.
@@ -34,13 +63,20 @@ impl<'a,T> Matrix<T,Vec<usize>>{
     }
 
     /// returns a reference to the matrices raw_data. 
-    pub fn raw_data(&self) -> &Vec<T>{
+    pub fn raw_data(&self) -> &A{
         &self.data 
     }
     /// returns a mutable reference to the matrices raw_data.
-    pub fn raw_data_mut(&mut self) -> &mut Vec<T> {
+    pub fn raw_data_mut(&mut self) -> &mut A{
         &mut self.data
     }
+    pub fn get_column(&self) -> MatrixView<T>{
+        unimplemented!()
+    }
+    
+}
+
+impl<T> OwnedMatrix<T>{
     ///appends a column to a matrice from raw_data.
     pub(crate) fn append_column_from_raw(&mut self, column: &mut Vec<T>) {
         {let  dim = self.mut_dim();
@@ -60,33 +96,33 @@ impl<'a,T> Matrix<T,Vec<usize>>{
         unimplemented!();
     }
 }
-type Matrixf32 = Matrix<f32,Vec<usize>>;
+type Matrixf32 = Matrix<f32,Vec<f32>,Vec<usize>>;
 impl Matrixf32{
     /// creates matrix of with dimensions dim filled with zeros.
     pub fn zeros(dim:Vec<usize>) -> Matrixf32{
         let length = dim.iter().product();
 
-        Matrix{data: vec![0.0;length], dim:dim}
+        Matrix::new(vec![0.0;length],dim)
     }
     ///creates matrix with dimensions dim filled with ones.
      pub fn ones(dim:Vec<usize>)-> Matrixf32{
         let length = dim.iter().product();
 
-        Matrix{data: vec![1.0;length], dim:dim}
+        Matrix::new(vec![1.0;length], dim)
     }
 }
-type Matrixi32 = Matrix<i32,Vec<usize>>;
+type Matrixi32 = Matrix<i32, Vec<i32>,Vec<usize>>;
 impl Matrixi32{
     /// creates matrix of with dimensions dim filled with zeros.
      pub fn zeros(dim:Vec<usize>)-> Matrixi32{
         let length = dim.iter().product();
 
-        Matrix{data: vec![0;length], dim:dim}
+        Matrix::new(vec![0;length], dim)
     }
     ///creates matrix with dimensions dim filled with ones.
      pub fn ones(dim:Vec<usize>)-> Matrixi32{
         let length = dim.iter().product();
-        Matrix{data: vec![1;length], dim:dim}
+        Matrix::new(vec![1;length], dim)
     }
 }
 
@@ -96,35 +132,12 @@ impl Matrixi32{
 
 
 #[cfg(test)]
-
-
 mod tests {
     
     use super::*;
     
     
     //use super::macros;
-    #[test]
-    fn vector() {
-        let matrix = Matrix::new(vec![2,3,4],vec![3, 1]);
-        let macro_matrix = mat![2,3,4];
-        println!("\n{}",matrix);
-        println!("{},{}",matrix[&[1,0]],matrix[&[2,0]]);
-        
-
-        assert_eq!(matrix, macro_matrix);
-        //assert_eq!(matrix.dim(), macro_matrix.dim());
-
-    }
-    #[test]
-    fn matrix() {
-        let matrix = Matrix::new(vec![2,3,4,5,6,7,8,9,10],vec![3, 3]);
-        let macro_matrix = mat![2,3,4;5,6,7;8,9,10];
-        
-        assert_eq!(matrix, macro_matrix);
-       // assert_eq!(matrix.data, macro_matrix.data);
-
-    }
     #[test]
     fn indexing() {
         let matrix = mat![2,3,4;5,6,7;8,9,10];
@@ -150,5 +163,14 @@ mod tests {
         let zeros = Matrixf32::zeros(vec![10,10]);
         println!("\n{}\n{}",ones, zeros);
     }
+
+    // #[test]
+    // fn vector_slice_test(){
+    //     let matrix = mat![1,2,3;4,5,6];
+    //     let slice = matrix.get_column(0);
+    //     let matrix_test = mat![1,2,3];
+    //     assert_eq!(slice, matrix_test);
+        
+    // }
 
 }

@@ -6,7 +6,6 @@ pub trait Coord{
     type Dimension: Dim + ?Sized;
     /// function that converts the received coordinates to a column major index
     fn index_checked(&self, dim: &Self::Dimension) -> Result<usize,&'static str>;
-
 }
 
 impl Coord for [usize]{
