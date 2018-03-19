@@ -35,8 +35,8 @@ impl<'a, T> Index<usize> for BorrowedData<'a, T> {
     }
 }
 
-type OwnedMatrix<T> = Matrix<T,Vec<T>,Vec<usize>>;
-type MatrixView<'a,T> =  Matrix<T, BorrowedData<'a,T>,Vec<usize>>;
+pub type OwnedMatrix<T> = Matrix<T,Vec<T>,Vec<usize>>;
+pub type MatrixView<'a,T> =  Matrix<T, BorrowedData<'a,T>,Vec<usize>>;
 
 /// An n dimensional array.
 /// The array is a general container of data.
