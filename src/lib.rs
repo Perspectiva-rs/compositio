@@ -5,10 +5,12 @@
 #[macro_use] mod macros;
 mod trait_impl;
 mod dim_traits;
+mod array_views;
 
 use dim_traits::Dim;
 use std::ops::Index;
 use std::rc::Rc;
+use array_views::SliceParameters;
 use std::marker::PhantomData;
 
 
@@ -20,12 +22,12 @@ pub trait MatCollection<T>: Index<usize, Output = T>{
 impl<T> MatCollection<T> for Vec<T>{
 }
 
-impl<T> MatCollection<T> for BorrowedData<T>{}
+impl<'a, T> MatCollection<T> for BorrowedData<'a,T>{}
 
 #[derive(Debug,PartialEq)]
-pub struct BorrowedData<T>(Box<Vec<T>>);
+pub struct BorrowedData<'a,T:'a>(&'a[T]);
 
-impl<T> Index<usize> for BorrowedData<T> {
+impl<'a, T> Index<usize> for BorrowedData<'a, T> {
     type Output = T;
     
     fn index(&self, index: usize) -> &T {
@@ -34,7 +36,7 @@ impl<T> Index<usize> for BorrowedData<T> {
 }
 
 type OwnedMatrix<T> = Matrix<T,Vec<T>,Vec<usize>>;
-type MatrixView<T> =  Matrix<T, BorrowedData<T>,Vec<usize>>;
+type MatrixView<'a,T> =  Matrix<T, BorrowedData<'a,T>,Vec<usize>>;
 
 /// An n dimensional array.
 /// The array is a general container of data.
@@ -76,7 +78,7 @@ impl<T, A:MatCollection<T>> Matrix<T,A,Vec<usize>>{
     
 }
 
-impl<T> OwnedMatrix<T>{
+impl<'a,T> OwnedMatrix<T>{
     ///appends a column to a matrice from raw_data.
     pub(crate) fn append_column_from_raw(&mut self, column: &mut Vec<T>) {
         {let  dim = self.mut_dim();
@@ -91,6 +93,15 @@ impl<T> OwnedMatrix<T>{
         }
         self.data.append(column);
         
+    }
+    pub fn slice(&self, limits: SliceParameters) -> MatrixView<'a,T>{
+        for limit in limits {
+             
+        }
+        unimplemented!()
+
+        
+
     }
     pub fn append_line(&mut self, line: &mut Vec<T>){
         unimplemented!();
