@@ -15,15 +15,22 @@ use dim_traits::Coord;
 // }
 
 //implements the Index method for an N dimension matrix.
-impl<'a,T, A:MatCollection<T>> Index<&'a [usize]> for Matrix<T,A,Vec<usize>>{
-    type Output = T;    
-    fn index(& self, index:&[usize]) -> &T{
+impl<'a,A:Data> Index<&'a [usize]> for BaseMatrix<A,Vec<usize>>{
+    type Output = <A as Data>::Elem;    
+    fn index(& self, index:&[usize]) -> &<A as Data>::Elem{
         let data = self.raw_data();        
         &data[index.index_checked( self.get_shape())]
     }
 }
 
-impl<T> IntoIterator for OwnedMatrix<T>{
+impl<'a,T:fmt::Display> Index<usize> for OwnedCollection<T>{
+    type Output = <OwnedCollection<T> as Data>::Elem;
+    fn index(&self, index: usize) -> &<OwnedCollection<T> as Data>::Elem{
+        &self.0[index]
+    }
+}
+
+impl<T:fmt::Display> IntoIterator for Matrix<T>{
     type Item = T;
     type IntoIter = ::std::vec::IntoIter<T>;
 
@@ -32,9 +39,16 @@ impl<T> IntoIterator for OwnedMatrix<T>{
     }
 }
 
-impl<'a,A,T:MatCollection<A>> fmt::Display for Matrix<A,T,Vec<usize>> 
-    where
-        A:fmt::Display,
+impl<T:fmt::Display> IntoIterator for OwnedCollection<T>{
+    type Item = T;
+    type IntoIter = ::std::vec::IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a,A:Data> fmt::Display for BaseMatrix<A,Vec<usize>> 
     {
     fn fmt(&self, f: &mut fmt::Formatter ) ->fmt::Result {
         println!("Shape = {:?}",self.get_shape());
@@ -49,3 +63,4 @@ impl<'a,A,T:MatCollection<A>> fmt::Display for Matrix<A,T,Vec<usize>>
        write!(f,"")
     }
 }
+

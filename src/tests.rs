@@ -31,8 +31,8 @@ use super::*;
     #[test]
     fn zeros_and_ones_matrix(){
         let vector = vec![10,10];
-        let ones = Matrixf32::ones(vector);
-        let zeros = Matrixf32::zeros(vec![10,10]);
+        let ones = Matrix::<f32>::ones(vector);
+        let zeros = Matrix::<f32>::zeros(vec![10,10]);
     }
     #[test]
     fn test_slice_parameter_macro(){
@@ -45,7 +45,7 @@ use super::*;
     fn test_slicing(){
         let matrix = mat![1,2,3;4,5,6];
         let view = matrix.slice(s![(0,3),(0,0)]);
-        let test_view = mat![1,2,3].into_view();
+        let test_view = mat![1,2,3].into_view(); 
         assert_eq!(view,test_view);
     }
     #[test]

@@ -2,24 +2,20 @@ use std::ops::Index;
 use super::*;
 
 //type definitions
-pub type MatrixView<'a,T> =  Matrix<T, BorrowedData<'a,T>,Vec<usize>>;
+
+pub type MatrixView<'a,T> =  BaseMatrix<BorrowedCollection<'a,T>,Vec<usize>>;
 
 impl<'a,T> MatrixView<'a,T>{
-    pub fn new_view(matrix:&'a OwnedMatrix<T>) -> MatrixView<'a,T>{
-        let data = BorrowedData(&matrix.raw_data());
-        let mut shape = matrix.get_shape().clone();
-        shape = shape.clone();
-        
-        let dummy = PhantomData;
-        MatrixView{data,shape,dummy}
-    }
+    
 }
 
 #[derive(Debug,PartialEq)]
-pub struct BorrowedData<'a,T:'a>(&'a[T]);
-impl<'a, T> MatCollection<T> for BorrowedData<'a,T>{}
+pub struct BorrowedCollection<'a,T:'a>(&'a[T]);
+impl<'a, T:'a + fmt::Display > Data for BorrowedCollection<'a, T>{
+    type Elem = T;
+}
 
-impl<'a, T> Index<usize> for BorrowedData<'a, T> {
+impl<'a, T> Index<usize> for BorrowedCollection<'a, T> {
     type Output = T;
 
     
