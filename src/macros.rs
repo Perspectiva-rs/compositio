@@ -6,12 +6,24 @@
 macro_rules! mat {
     ($($($x:expr),*);*) => {
         {
-            let mut matrix = Matrix::new(vec![],vec![0, 0]);
+            let mut matrix = Matrix::new(vec![],vec![0]);
             $(let mut vector = vec![$($x),*];
             matrix.append_column_from_raw(&mut vector);
             );*
 
             matrix
+        }
+    };
+}
+#[allow(unused_macros)]
+macro_rules! s {
+    ($(($b:expr , $e:expr)),*) => {
+        {
+            let mut vector = vec![];
+            $(let array = [$b,$e];
+            vector.push(array);
+            );+
+            SliceParameters::new(vector)
         }
     };
 }
