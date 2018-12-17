@@ -45,7 +45,7 @@ use super::*;
     fn test_slicing(){
         let matrix = mat![1,2,3;4,5,6];
         let view = matrix.slice(s![(0,3),(0,0)]);
-        let test_view = mat![1,2,3].into_view(); 
+        let test_view = matrix.into_view(); 
         assert_eq!(view,test_view);
     }
     #[test]

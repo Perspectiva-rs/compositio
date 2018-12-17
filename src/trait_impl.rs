@@ -1,5 +1,4 @@
-use std::ops::{Index, Deref};
-use std::process;
+use std::ops::{Index};
 use std::fmt;
 use super::*;  
 use dim_traits::Coord;
@@ -16,7 +15,7 @@ use dim_traits::Coord;
 
 //implements the Index method for an N dimension matrix.
 impl<'a,A:Data> Index<&'a [usize]> for BaseMatrix<A,Vec<usize>>{
-    type Output = <A as Data>::Elem;    
+    type Output = <A as Data>::Elem;     
     fn index(& self, index:&[usize]) -> &<A as Data>::Elem{
         let data = self.raw_data();        
         &data[index.index_checked( self.get_shape())]

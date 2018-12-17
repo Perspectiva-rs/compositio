@@ -1,4 +1,5 @@
 use std::ops::Index;
+use dim_traits::Coord;
 use super::*;
 
 //type definitions
@@ -6,7 +7,12 @@ use super::*;
 pub type MatrixView<'a,T> =  BaseMatrix<BorrowedCollection<'a,T>,Vec<usize>>;
 
 impl<'a,T> MatrixView<'a,T>{
-    
+    pub fn new(data:  &'a[T], offset:usize,stride:&Vec<usize>,dim: &Vec<usize>) ->Self{
+
+        let matrix_data = BorrowedCollection(data);
+        MatrixView{data:matrix_data,shape: Shape::new(offset,stride.clone(),dim.clone())}
+
+    }
 }
 
 #[derive(Debug,PartialEq)]
@@ -53,6 +59,28 @@ impl SliceParameters{
         }
         valid
     }
+    pub fn get_slice_dim(&self) -> Vec<usize>{
+        let mut dim = vec![0;self.parameters.len()];
+        let mut i = 0;
+        for parameter in self.parameters.iter(){
+            dim[i] = parameter[1] - parameter[0];   
+            i += 1;        
+        }
+        dim
+    }
+    pub fn get_slice_offset(&self, shape: &Shape<Vec<usize>>) -> usize{
+        let sub = self.get_first_sub();
+        sub.index_checked(shape)
+    }
+    pub fn get_first_sub(&self) ->Vec<usize>{
+        let mut sub = vec![0;self.parameters.len()];
+        let mut i = 0;
+        for parameter in self.parameters.iter(){
+            sub[i] = parameter[0];   
+            i += 1;        
+        }
+        sub
+    }
 }
 
 impl IntoIterator for SliceParameters{
@@ -68,6 +96,6 @@ impl IntoIterator for SliceParameters{
 
 #[cfg(test)]
 mod test_array_views{
-    use super::*;
+   
  
 }

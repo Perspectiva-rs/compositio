@@ -10,11 +10,11 @@ pub struct Shape<D:Dim>{
 }
 impl Clone for Shape<Vec<usize>>{
     fn clone(&self) -> Self{
-        Shape::new(self.offset,self.get_dim().clone())
+        Shape::new(self.offset,self.get_stride().clone(),self.get_dim().clone())
     }
 }
 impl Shape<Vec<usize>>{
-    pub fn new(offset: usize, dim:Vec<usize>) -> Self{
+    pub fn new(offset: usize, stride: Vec<usize>, dim:Vec<usize>) -> Self{
 
         let mut stride = vec![0;dim.len()];
         stride[0] = 1;
@@ -25,7 +25,12 @@ impl Shape<Vec<usize>>{
         Shape{offset,dim,stride}
     }
 
-    
+    pub fn get_stride(&self) -> &Vec<usize> {
+        &self.stride
+    }
+    pub fn get_offset(&self) -> usize {
+        self.offset
+    }
     pub fn get_dim(&self) -> &Vec<usize> {
         &self.dim
     }
