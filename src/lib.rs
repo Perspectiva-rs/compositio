@@ -16,13 +16,12 @@ use std::fmt;
 use shape::Shape;
 
 
-///Private trait to encapsulate collections that can hold matrix data
+///Label trait, used to indicate a type holds data of type Elem.
 
 pub trait Data:Index<usize,Output = <Self as Data>::Elem>{
-
     type Elem: fmt::Display;
-    
 }
+
 pub struct OwnedCollection<T>(Vec<T>);
 
 impl<T:fmt::Display> Data for OwnedCollection<T>{
@@ -85,37 +84,64 @@ impl<'a,T:fmt::Display> Matrix<T>{
             let dimensions_crossed: usize = dim[0..i].iter().product();
             stride[i] = dimensions_crossed;
         }
+        println!("pineapple_stride = {:?}",stride );
         stride
     }
-    /// constructor method for owned arrays.
-    pub fn new(data:Vec<T>,dim:Vec<usize>) -> Matrix<T> {
-        let stride = Matrix::<T>::calculate_stride(&dim);
-        let shape = Shape::new(0,stride,dim);
+    /// creates a new empty matrix.
+    pub fn new() -> Matrix<T> {
+        let data = vec![];
+        let dim = vec![0];
+        
+        println!("Pineapple is in Matrix::new() and stride equals");
+       
+        let shape = Shape::new(0,vec![1],dim);
         
         Matrix{data:OwnedCollection(data) , shape:shape}
         
     } 
-    
+
+    /// Creates a new Matrix from Raw Data
+    pub fn from_raw(data:Vec<T>, dim:Vec<usize>) ->Self{
+        let stride = Matrix::<T>::calculate_stride(&dim);
+        let shape = Shape::new(0,stride,dim);
+        Matrix{data:OwnedCollection(data) , shape:shape}
+    }
 
     /// Get a view of the Data in owned OwnedMatrix
     // Should eventually be called in Deref, as soon as I figure out how
-    pub fn into_view(&'a self)->MatrixView<'a,T>{
-        MatrixView::new(&self.data.0, self.shape.get_offset(),&self.shape.get_dim(), &self.shape.get_stride())
+    pub fn as_view(&'a self)->MatrixView<'a,T>{        
+        MatrixView::new(&self.data.0, self.shape.get_offset(), &self.shape.get_stride(),&self.get_dim())
+        
     }
     ///appends a column to a matrice from raw_data.
     pub(crate) fn append_column_from_raw(&mut self, column: &mut Vec<T>) {
         
         self.shape.check_special_cases(column.len());
         self.shape.increase_size(1,1); 
-        
         self.data.0.append(column);
-        
+    }
+    pub fn check_contained(&self, limits: &SliceParameters) -> bool{
+        let mut i = 0;
+        let mut is_contained = true;
+        if limits.get_ndims() > self.get_dim().len(){
+            return false
+        }
+        for limit in limits.into_iter() {
+            is_contained = limit[1] < self.get_dim()[i] && is_contained;
+            i +=1;
+        }
+        is_contained
     }
     pub fn slice(&'a self, limits: SliceParameters) -> MatrixView<'a,T>{
-        
-        MatrixView::new(&self.data.0, limits.get_slice_offset(&self.shape),&limits.get_slice_dim(),self.shape.get_stride())
+        if self.check_contained(&limits){
+            println!("{:?}", self.shape.get_stride() );
+            MatrixView::new(&self.data.0, limits.get_slice_offset(&self.shape),self.shape.get_stride(),&limits.get_slice_dim())
+        }else{
+            panic!("Slice too big.");
+        }
 
     }
+
     pub fn append_line(&mut self, line: &mut Vec<T>){
         unimplemented!();
     }
@@ -126,14 +152,14 @@ impl Matrix<f32>{
     pub fn zeros(dim:Vec<usize>) -> Matrix<f32>{
         let length = dim.iter().product();
 
-        Matrix::new(vec![0.0;length],dim)
+        Matrix::from_raw(vec![0.0;length],dim)
     }
     ///creates matrix with dimensions dim filled with ones.
      pub fn ones(dim:Vec<usize>)-> Matrix<f32>{
         
         let length = dim.iter().product();
         
-        Matrix::new(vec![1.0;length], dim)
+        Matrix::from_raw(vec![1.0;length], dim)
     }
 }
 
@@ -143,14 +169,14 @@ impl Matrix<i32>{
         
         let length = dim.iter().product();
         
-        Matrix::new(vec![0;length], dim)
+        Matrix::from_raw(vec![0;length], dim)
     }
     ///creates matrix with dimensions dim filled with ones.
      pub fn ones(dim:Vec<usize>)-> Matrix<i32>{
                 
         let length = dim.iter().product();
                 
-        Matrix::new(vec![1;length], dim)
+        Matrix::from_raw(vec![1;length], dim)
     }
 }
 

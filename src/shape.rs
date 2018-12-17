@@ -15,14 +15,7 @@ impl Clone for Shape<Vec<usize>>{
 }
 impl Shape<Vec<usize>>{
     pub fn new(offset: usize, stride: Vec<usize>, dim:Vec<usize>) -> Self{
-
-        let mut stride = vec![0;dim.len()];
-        stride[0] = 1;
-        for  i in 1..dim.n_dims(){
-                let dimensions_crossed: usize = dim[0..i].iter().product();
-                stride[i] = dimensions_crossed;
-            }
-        Shape{offset,dim,stride}
+        Shape{offset,stride,dim}
     }
 
     pub fn get_stride(&self) -> &Vec<usize> {
@@ -42,9 +35,10 @@ impl Shape<Vec<usize>>{
         sum == 0
     }
     pub fn sub_2_index_unchecked(&self,sub:&[usize]) -> usize{
-        sub.into_iter().zip(&self.stride).map(|(x, y)|{ 
-            let number = x*y; 
-            number} ).sum()
+        let index:usize = sub.into_iter().zip(&self.stride).map(|(x, y)|{ 
+            let number: usize = x*y; 
+            number} ).sum();
+            index + self.offset       
     }
     pub(crate) fn check_special_cases(&mut self, length_column: usize){
         if self.is_empty() {

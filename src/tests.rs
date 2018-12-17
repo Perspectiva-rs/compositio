@@ -17,14 +17,14 @@ use super::*;
     
     #[test]
     fn indexing_3d() {
-        let matrix = Matrix::new(vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],vec![3,3,2]);
+        let matrix = Matrix::from_raw(vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],vec![3,3,2]);
         assert_eq!(3,matrix[&[2,0,0]]);
         assert_eq!(18,matrix[&[2,2,1]]);
     }
 
     #[test]
     fn indexing_5d() {
-        let matrix = Matrix::new(vec![1,2,3,4, 5,6,7,8,  9,10,11,12, 13,14,15,16],vec![2,2,2,2]);
+        let matrix = Matrix::from_raw(vec![1,2,3,4, 5,6,7,8,  9,10,11,12, 13,14,15,16],vec![2,2,2,2]);
         
         assert_eq!(16,matrix[&[1,1,1,1]]);
     }
@@ -45,14 +45,36 @@ use super::*;
     fn test_slicing(){
         let matrix = mat![1,2,3;4,5,6];
         let view = matrix.slice(s![(0,3),(0,0)]);
-        let test_view = matrix.into_view(); 
-        assert_eq!(view,test_view);
     }
     #[test]
     fn test_slicing_parameter_check(){
-        
+        let matrix = mat![1,2,3;4,5,6;7,8,9];
+        let view = matrix.slice(s![(0,2),(0,2)]);
+        println!("{:?}",view.get_dim());
+        assert_eq!(matrix.get_dim(), view.get_dim());
     }
     
+    #[test]
+    fn test_slice_indexing(){
+        println!("Super Pineapple");
+        let matrix = mat![0,1,2;3,4,5;6,7,8];
+        
+        let slice = matrix.slice(s![(1,1),(0,2)]);
+        println!("{}", matrix);
+        println!("{}",slice);
+        println!("matrix[0,1]{} slice[0,0]{}", matrix[&[0,1]], slice[&[0,0]]);
+        assert_eq!(matrix[&[1,0]],slice[&[0,0]]);
+    }
+    
+    #[test]
+    fn test_slice_printing(){
+        let matrix = mat![0,1,2;3,4,5;6,7,8];
+        let slice = matrix.slice(s![(1,1),(0,2)]);
+        let another_slice = matrix.slice(s!{(0,2),(1,2)});
+        println!("{}", matrix);
+        println!("{}",slice);
+        println!("{}",another_slice);
+    }
     
 
     // #[test]
