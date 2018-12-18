@@ -151,46 +151,14 @@ impl<'a,T:fmt::Display> Matrix<T>{
     }
 }
 
-
-impl Matrix<f32>{
-    /// creates matrix of with dimensions dim filled with zeros.
-    pub fn zeros(dim:Vec<usize>) -> Matrix<f32>{
-        let length = dim.iter().product();
-
-        Matrix::from_raw(vec![0.0;length],dim)
+impl<T:fmt::Display + Num + fmt::Debug + Clone> Matrix<T>{
+    pub fn zeros(dim: Vec<usize>) -> Self{
+        Matrix::from_raw(vec![<T as Zero>::zero();dim.iter().product()], dim)
     }
-    ///creates matrix with dimensions dim filled with ones.
-     pub fn ones(dim:Vec<usize>)-> Matrix<f32>{
-        
-        let length = dim.iter().product();
-        
-        Matrix::from_raw(vec![1.0;length], dim)
-    }
+    pub fn ones(dim: Vec<usize>) -> Self{
+        Matrix::from_raw(vec![<T as One>::one();dim.iter().product()], dim)
+    } 
 }
-
-impl Matrix<i32>{
-    /// creates matrix of with dimensions dim filled with zeros.
-     pub fn zeros(dim:Vec<usize>)-> Matrix<i32>{
-        
-        let length = dim.iter().product();
-        
-        Matrix::from_raw(vec![0;length], dim)
-    }
-    ///creates matrix with dimensions dim filled with ones.
-     pub fn ones(dim:Vec<usize>)-> Matrix<i32>{
-                
-        let length = dim.iter().product();
-                
-        Matrix::from_raw(vec![1;length], dim)
-    }
-}
-
-
-
-
-
-
-
 
 #[cfg(test)]
 mod tests;
