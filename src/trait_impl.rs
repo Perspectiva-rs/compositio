@@ -1,7 +1,8 @@
-use std::ops::{Index};
+use std::ops::{Index,IndexMut};
 use std::fmt;
 use super::*;  
 use dim_traits::Coord;
+use array_views::BorrowedCollection;
 
 // impl<'a,T> Deref for OwnedMatrix<T>{
 
@@ -21,13 +22,30 @@ impl<'a,A:Data> Index<&'a [usize]> for BaseMatrix<A,Vec<usize>>{
         &data[index.index_checked( self.get_shape())]
     }
 }
+impl<'a,T: fmt::Display> IndexMut<&'a [usize]> for Matrix<T>{
+    fn index_mut(&mut self, index:&'a [usize]) -> &mut T{
+        let ind = index.index_checked(&self.get_shape());
+        let data = self.raw_data_mut();
+        &mut data[ind]
+    }
+}
+
 
 impl<'a,T:fmt::Display> Index<usize> for OwnedCollection<T>{
     type Output = <OwnedCollection<T> as Data>::Elem;
     fn index(&self, index: usize) -> &<OwnedCollection<T> as Data>::Elem{
         &self.0[index]
-    }
+    }  
 }
+impl<'a,T:fmt::Display> IndexMut<usize> for OwnedCollection<T>{ 
+    fn index_mut(&mut self, index: usize) -> &mut T{
+        &mut self.0[index]
+    }  
+}
+
+
+
+
 
 impl<T:fmt::Display> IntoIterator for Matrix<T>{
     type Item = T;

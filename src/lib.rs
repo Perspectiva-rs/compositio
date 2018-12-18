@@ -1,6 +1,6 @@
 
 
-
+extern crate num;
 
 #[macro_use] mod macros;
 mod trait_impl;
@@ -8,10 +8,11 @@ mod dim_traits;
 mod array_views;
 mod shape;
 
+use num::{Num,Zero,One};
 
 use dim_traits::Dim;
 use std::ops::Index;
-use array_views::{SliceParameters,MatrixView};
+use array_views::{SliceParameters,MatrixView,MatrixViewMut};
 use std::fmt;
 use shape::Shape;
 
@@ -36,7 +37,7 @@ impl<T:fmt::Display> Data for OwnedCollection<T>{
 /// The array can grow.
 /// The array can be indexed by using a number of coordinates equal to the dimension of the matrix.
 #[derive(Debug,PartialEq)]
-pub struct BaseMatrix<A, D:Dim>{
+pub struct BaseMatrix<A:Data, D:Dim>{
     data: A,
     shape: Shape<D>,
 }
@@ -110,8 +111,11 @@ impl<'a,T:fmt::Display> Matrix<T>{
     /// Get a view of the Data in owned OwnedMatrix
     // Should eventually be called in Deref, as soon as I figure out how
     pub fn as_view(&'a self)->MatrixView<'a,T>{        
-        MatrixView::new(&self.data.0, self.shape.get_offset(), &self.shape.get_stride(),&self.get_dim())
-        
+        MatrixView::new(&self.data.0, self.shape.get_offset(), &self.shape.get_stride(), self.get_dim().clone())  
+    }
+    pub fn as_view_mut(&'a mut self)->MatrixViewMut<'a,T>{
+        let dim =  self.get_dim().clone();       
+        MatrixViewMut::new(& mut self.data.0, self.shape.get_offset(), &self.shape.get_stride(),dim)  
     }
     ///appends a column to a matrice from raw_data.
     pub(crate) fn append_column_from_raw(&mut self, column: &mut Vec<T>) {
@@ -135,7 +139,7 @@ impl<'a,T:fmt::Display> Matrix<T>{
     pub fn slice(&'a self, limits: SliceParameters) -> MatrixView<'a,T>{
         if self.check_contained(&limits){
             println!("{:?}", self.shape.get_stride() );
-            MatrixView::new(&self.data.0, limits.get_slice_offset(&self.shape),self.shape.get_stride(),&limits.get_slice_dim())
+            MatrixView::new(&self.data.0, limits.get_slice_offset(&self.shape),self.shape.get_stride(),limits.get_slice_dim().clone())
         }else{
             panic!("Slice too big.");
         }
@@ -146,6 +150,7 @@ impl<'a,T:fmt::Display> Matrix<T>{
         unimplemented!();
     }
 }
+
 
 impl Matrix<f32>{
     /// creates matrix of with dimensions dim filled with zeros.

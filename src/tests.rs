@@ -75,6 +75,25 @@ use super::*;
         println!("{}",slice);
         println!("{}",another_slice);
     }
+    #[test]
+    fn test_mut_slice(){
+        let mut matrix = mat![0,1,2;3,4,5;6,7,8];
+        
+        {let mut view = matrix.as_view_mut();
+        
+            view[&[0,0]] = 1;
+            println!("{}", view );
+        }
+        println!("{}", matrix);
+
+    }
+    #[test]
+    fn test_numeric_support(){
+
+        let matrix = Matrix::<f32>::zeros_(vec![5,5]);
+        println!("{}", matrix);
+
+    }
     
 
     // #[test]

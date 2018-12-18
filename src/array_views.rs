@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::IndexMut;
 use dim_traits::Coord;
 use super::*;
 
@@ -6,27 +6,58 @@ use super::*;
 
 pub type MatrixView<'a,T> =  BaseMatrix<BorrowedCollection<'a,T>,Vec<usize>>;
 
-impl<'a,T> MatrixView<'a,T>{
-    pub fn new(data:  &'a[T], offset:usize,stride:&Vec<usize>,dim: &Vec<usize>) ->Self{
+impl<'a,T:fmt::Display> MatrixView<'a,T>{
+    pub fn new(data:  &'a[T], offset:usize,stride:&Vec<usize>,dim: Vec<usize>) ->Self{
         println!("stride MatrixView::new = {:?}", stride );
         let matrix_data = BorrowedCollection(data);
-        MatrixView{data:matrix_data,shape: Shape::new(offset,stride.clone(),dim.clone())}
+        MatrixView{data:matrix_data,shape: Shape::new(offset,stride.clone(),dim)}
+
+    }
+}
+pub type MatrixViewMut<'a,T> = BaseMatrix<BorrowedCollectionMut<'a,T>,Vec<usize>>;
+
+impl<'a,T:fmt::Display> MatrixViewMut<'a,T>{
+    pub fn new(data:  &'a mut [T], offset:usize,stride:&Vec<usize>,dim: Vec<usize>) ->Self{
+        println!("stride MatrixView::new = {:?}", stride );
+        let matrix_data = BorrowedCollectionMut(data);
+        MatrixViewMut{data:matrix_data,shape: Shape::new(offset,stride.clone(),dim)}
 
     }
 }
 
 #[derive(Debug,PartialEq)]
-pub struct BorrowedCollection<'a,T:'a>(&'a[T]);
+pub struct BorrowedCollection<'a,T:'a>(&'a [T]);
 impl<'a, T:'a + fmt::Display > Data for BorrowedCollection<'a, T>{
     type Elem = T;
 }
-
 impl<'a, T> Index<usize> for BorrowedCollection<'a, T> {
-    type Output = T;
-
-    
+    type Output = T;   
     fn index(&self, index: usize) -> &T {
         &self.0[index]
+    }
+}
+pub struct BorrowedCollectionMut<'a, T:'a>(&'a mut [T]);
+impl<'a, T:'a + fmt::Display > Data for BorrowedCollectionMut<'a, T>{
+    type Elem = T;
+}
+
+impl<'a,'b,T:'b + fmt::Display> IndexMut<&'a [usize]> for MatrixViewMut<'b,T>{
+    fn index_mut(&mut self, index:&'a [usize]) -> &mut T{
+        let ind = index.index_checked(&self.get_shape());
+        let data = self.raw_data_mut();
+        &mut data[ind]
+    }
+}
+impl<'a, T> Index<usize> for BorrowedCollectionMut<'a, T> {
+    type Output = T;   
+    fn index(&self, index: usize) -> &T {
+        &self.0[index]
+    }
+}
+
+impl<'a,T:'a + fmt::Display> IndexMut<usize> for BorrowedCollectionMut<'a,T>{
+    fn index_mut(& mut self, index: usize) -> &mut T{
+        & mut self.0[index]
     }
 }
 

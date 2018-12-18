@@ -5,9 +5,7 @@
 #[allow(unused_macros)]
 macro_rules! mat {
     ($($($x:expr),*);*) => {
-        {   println!("Pineapple?");
-            let mut matrix = Matrix::new();
-            println!("Pineapple matrix");
+        {   let mut matrix = Matrix::new();
             $(let mut vector = vec![$($x),*];
             matrix.append_column_from_raw(&mut vector);
             );*
